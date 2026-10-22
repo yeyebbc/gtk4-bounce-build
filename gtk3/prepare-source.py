@@ -45,7 +45,11 @@ else:
     control = source / "debian/control"
     marker = "Package: gtk-3-examples\n"
     assert control.read_text().count(marker) == 1
-    control.write_text(control.read_text().replace(marker, marker + "Build-Profiles: <!pkg.gtk3.noexamples>\n"))
+    text = control.read_text().replace(marker, marker + "Build-Profiles: <!pkg.gtk3.noexamples>\n")
+    # Ubuntu's architecture-independent translation helper lacks Multi-Arch:
+    # foreign, so cross builds must explicitly request the native tool.
+    text = text.replace("dh-sequence-translations,", "dh-sequence-translations:native,")
+    control.write_text(text)
     rules = source / "debian/rules"
     rules.write_text(rules.read_text() + "\n# CI runs focused tests against the packaged library.\n"
                      "configure_flags_deb += -Dinstalled_tests=false -Dtests=false -Ddemos=false -Dexamples=false\n")

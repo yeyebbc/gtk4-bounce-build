@@ -80,3 +80,7 @@ above is independent of this artifact.
 The local Flatpak app registry is in `flatpak-apps.json`. Run
 `bash enable-flatpak.sh APP_ID` to enable a registered app with the downloaded
 library. The original bundle's runtime and GTK source checks still apply.
+
+## GTK 3 source port
+
+See [the GTK 3 bounce patch and CI tests](gtk3/README.md) for GTK 3.24.41.

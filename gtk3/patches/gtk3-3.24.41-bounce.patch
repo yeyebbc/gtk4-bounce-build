@@ -38,7 +38,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
    GtkCssNode    *overshoot_node[4];
    GtkCssNode    *undershoot_node[4];
  
-@@ -953,47 +959,46 @@
+@@ -953,47 +959,50 @@
    gtk_gesture_set_sequence_state (gesture, sequence, state);
  }
  
@@ -64,6 +64,10 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
 +{
 +  GtkScrolledWindowPrivate *priv = scrolled_window->priv;
 +  gint overshoot_x, overshoot_y;
++
++  /* Adjustment notifications also run while constructing/destroying bars. */
++  if (!priv->hscrollbar || !priv->vscrollbar)
++    return;
 +
 +  _gtk_scrolled_window_get_overshoot (scrolled_window, &overshoot_x, &overshoot_y);
 +
@@ -123,7 +127,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  }
  
  static void
-@@ -1046,6 +1051,12 @@
+@@ -1046,6 +1055,12 @@
  
    if (!priv->in_drag || !gtk_gesture_handles_sequence (gesture, sequence))
      gtk_gesture_set_state (gesture, GTK_EVENT_SEQUENCE_DENIED);
@@ -136,7 +140,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  }
  
  static void
-@@ -1797,6 +1808,17 @@
+@@ -1797,6 +1812,17 @@
        gtk_widget_size_allocate (priv->vscrollbar, &child_allocation);
      }
  
@@ -154,7 +158,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
    gtk_scrolled_window_check_attach_pan_gesture (scrolled_window);
  }
  
-@@ -2015,8 +2037,8 @@
+@@ -2015,8 +2041,8 @@
    context = gtk_widget_get_style_context (widget);
    gtk_scrolled_window_inner_allocation (widget, &rect);
  
@@ -165,7 +169,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  
    if (overshoot_x > 0)
      {
-@@ -2116,7 +2138,26 @@
+@@ -2116,7 +2142,26 @@
          gtk_scrolled_window_draw_scrollbars_junction (scrolled_window, cr);
      }
  
@@ -193,7 +197,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  
    if (gtk_cairo_should_draw_window (cr, gtk_widget_get_window (widget)))
      {
-@@ -3319,8 +3360,9 @@
+@@ -3319,8 +3364,9 @@
  
    gtk_scrolled_window_relative_allocation (widget, relative_allocation);
  
@@ -205,7 +209,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
    child_allocation.width = relative_allocation->width;
    child_allocation.height = relative_allocation->height;
  
-@@ -3684,6 +3726,7 @@
+@@ -3684,6 +3730,7 @@
  
    *prev_value = value;
    gtk_adjustment_set_value (adjustment, value);
@@ -213,7 +217,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  
    if (value == lower)
      edge_pos = vertical ? GTK_POS_TOP : GTK_POS_LEFT;
-@@ -3737,6 +3780,8 @@
+@@ -3737,6 +3784,8 @@
      }
    else if (priv->vscrolling)
      g_clear_pointer (&priv->vscrolling, gtk_kinetic_scrolling_free);
@@ -222,7 +226,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  
    if (!priv->hscrolling && !priv->vscrolling)
      {
-@@ -4028,6 +4073,8 @@
+@@ -4028,6 +4077,8 @@
      priv->unclamped_hadj_value = gtk_adjustment_get_value (adjustment);
    else if (adjustment == gtk_range_get_adjustment (GTK_RANGE (priv->vscrollbar)))
      priv->unclamped_vadj_value = gtk_adjustment_get_value (adjustment);
@@ -231,7 +235,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
  }
  
  static void
-@@ -4076,6 +4123,8 @@
+@@ -4076,6 +4127,8 @@
      }
  
    _gtk_bin_set_child (bin, scrollable_child);
@@ -240,7 +244,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
    gtk_widget_set_parent (scrollable_child, GTK_WIDGET (bin));
  
    g_object_set (scrollable_child, "hadjustment", hadj, "vadjustment", vadj, NULL);
-@@ -4593,6 +4642,27 @@
+@@ -4593,6 +4646,27 @@
    gtk_widget_register_window (widget, window);
    gtk_widget_set_realized (widget, TRUE);
  
@@ -268,7 +272,7 @@ Target: GTK 3.24.41, Ubuntu source 3.24.41-4ubuntu1.3.
    priv->hindicator.window = create_indicator_window (scrolled_window, priv->hscrollbar);
    priv->vindicator.window = create_indicator_window (scrolled_window, priv->vscrollbar);
  
-@@ -4651,6 +4721,13 @@
+@@ -4651,6 +4725,13 @@
    gtk_widget_unregister_window (widget, priv->vindicator.window);
    indicator_reset (&priv->vindicator);
  

@@ -5,3 +5,4 @@ __pycache__/
 _flatpak/
 installed/
 flatpak-build.log
+_gtk3/

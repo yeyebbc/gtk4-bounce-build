@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_dir"
+. /etc/os-release
+[[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
+[[ $(dpkg --print-architecture) == amd64 ]]
+
+python3 scripts/prepare-source.py
+mkdir -p _build/deps
+(
+  cd _build/deps
+  sudo mk-build-deps --install --remove \
+    --tool 'apt-get --yes --no-install-recommends' ../gtk4/debian/control
+)
+
+jobs=$(nproc)
+(( jobs <= 2 )) || jobs=2
+(
+  cd _build/gtk4
+  # Keep Ubuntu's build rules and ABI checks. Run focused tests below instead
+  # of the full display/font/GPU-dependent X11 and Wayland test matrix.
+  DEB_BUILD_OPTIONS="parallel=$jobs nocheck" dpkg-buildpackage -b -us -uc
+)
+
+env GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
+  xvfb-run -a dbus-run-session -- \
+  meson test -C _build/gtk4/debian/build/deb --no-rebuild --print-errorlogs scrolledwindow
+
+# Verify the produced library and headers together, installed inside this CI
+# runner. These commands never execute on the user's machine.
+core_packages=(libgtk-4-1 libgtk-4-common libgtk-4-bin libgtk-4-dev libgtk-4-media-gstreamer gir1.2-gtk-4.0)
+core_debs=()
+for package in "${core_packages[@]}"; do
+  matches=("$repo_dir/_build/${package}_"*.deb)
+  [[ ${#matches[@]} == 1 && -f "${matches[0]}" ]]
+  core_debs+=("${matches[0]}")
+done
+sudo apt-get --yes --no-remove --no-install-recommends install "${core_debs[@]}"
+cc -Wall -Wextra -Werror scripts/render-smoke.c -o _build/render-smoke $(pkg-config --cflags --libs gtk4)
+env GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
+  xvfb-run -a dbus-run-session -- _build/render-smoke
+
+python3 scripts/bundle.py

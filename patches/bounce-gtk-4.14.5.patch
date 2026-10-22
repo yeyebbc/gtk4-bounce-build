@@ -1,0 +1,216 @@
+From 7a3af0ed9aadced79abb54db6ef3fdba690d8e09 Mon Sep 17 00:00:00 2001
+From: Christian Hergert <christian@sourceandstack.com>
+Date: Sun, 24 May 2026 11:37:42 +0200
+Subject: [PATCH] gtk/scrolledwindow: use bounce for undershoot/overshoot
+
+This tries to match the feeling to Firefox on Linux for some level of
+continuity.
+---
+ gtk/gtkscrolledwindow.c | 103 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 93 insertions(+), 10 deletions(-)
+
+diff --git a/gtk/gtkscrolledwindow.c b/gtk/gtkscrolledwindow.c
+index 51cbb024b3..d90a6ef0cd 100644
+--- a/gtk/gtkscrolledwindow.c
++++ b/gtk/gtkscrolledwindow.c
+@@ -178,9 +178,11 @@
+  */
+ 
+ /* Kinetic scrolling */
+-#define MAX_OVERSHOOT_DISTANCE 100
++#define MAX_OVERSHOOT_DISTANCE 600
++#define OVERSHOOT_VISUAL_DISTANCE 240
++#define OVERSHOOT_VISUAL_RESISTANCE 390
+ #define DECELERATION_FRICTION 4
+-#define OVERSHOOT_FRICTION 20
++#define OVERSHOOT_FRICTION 31
+ #define VELOCITY_ACCUMULATION_FLOOR 0.33
+ #define VELOCITY_ACCUMULATION_CEIL 1.0
+ #define VELOCITY_ACCUMULATION_MAX 6.0
+@@ -965,14 +967,11 @@ scrolled_window_drag_begin_cb (GtkScrolledWindow *scrolled_window,
+ static void
+ gtk_scrolled_window_invalidate_overshoot (GtkScrolledWindow *scrolled_window)
+ {
+-  GtkAllocation child_allocation;
+   int overshoot_x, overshoot_y;
+ 
+   if (!_gtk_scrolled_window_get_overshoot (scrolled_window, &overshoot_x, &overshoot_y))
+     return;
+ 
+-  gtk_scrolled_window_relative_allocation (scrolled_window,
+-                                           &child_allocation);
+   if (overshoot_x != 0)
+     gtk_widget_queue_draw (GTK_WIDGET (scrolled_window));
+ 
+@@ -980,6 +979,29 @@ gtk_scrolled_window_invalidate_overshoot (GtkScrolledWindow *scrolled_window)
+     gtk_widget_queue_draw (GTK_WIDGET (scrolled_window));
+ }
+ 
++static int
++scrolled_window_get_visual_overshoot (int overshoot)
++{
++  int distance;
++  int sign;
++
++  if (overshoot == 0)
++    return 0;
++
++  sign = overshoot > 0 ? 1 : -1;
++  distance = ABS (overshoot);
++
++  return sign *
++         (OVERSHOOT_VISUAL_DISTANCE * distance) /
++         (distance + OVERSHOOT_VISUAL_RESISTANCE);
++}
++
++static void
++gtk_scrolled_window_update_visual_overshoot (GtkScrolledWindow *scrolled_window)
++{
++  gtk_widget_queue_draw (GTK_WIDGET (scrolled_window));
++}
++
+ static void
+ scrolled_window_drag_update_cb (GtkScrolledWindow *scrolled_window,
+                                 double             offset_x,
+@@ -1052,6 +1074,19 @@ gtk_scrolled_window_decelerate (GtkScrolledWindow *scrolled_window,
+     }
+ }
+ 
++static void
++scrolled_window_drag_end_cb (GtkScrolledWindow *scrolled_window,
++                             double             offset_x,
++                             double             offset_y,
++                             GtkGesture        *gesture)
++{
++  GtkScrolledWindowPrivate *priv = gtk_scrolled_window_get_instance_private (scrolled_window);
++
++  if (priv->deceleration_id == 0 &&
++      _gtk_scrolled_window_get_overshoot (scrolled_window, NULL, NULL))
++    gtk_scrolled_window_decelerate (scrolled_window, 0, 0);
++}
++
+ static void
+ scrolled_window_swipe_cb (GtkScrolledWindow *scrolled_window,
+                           double             x_velocity,
+@@ -1505,5 +1540,9 @@ scroll_controller_scroll_end (GtkEventControllerScroll *scroll,
+ 
+   priv->smooth_scroll = FALSE;
++
++  if (priv->deceleration_id == 0 &&
++      _gtk_scrolled_window_get_overshoot (scrolled_window, NULL, NULL))
++    gtk_scrolled_window_decelerate (scrolled_window, 0, 0);
+ }
+ 
+ static void
+@@ -2030,8 +2069,8 @@ gtk_scrolled_window_snapshot_overshoot (GtkScrolledWindow *scrolled_window,
+ 
+   gtk_scrolled_window_inner_allocation (scrolled_window, &rect);
+ 
+-  overshoot_x = CLAMP (overshoot_x, - MAX_OVERSHOOT_DISTANCE, MAX_OVERSHOOT_DISTANCE);
+-  overshoot_y = CLAMP (overshoot_y, - MAX_OVERSHOOT_DISTANCE, MAX_OVERSHOOT_DISTANCE);
++  overshoot_x = scrolled_window_get_visual_overshoot (overshoot_x);
++  overshoot_y = scrolled_window_get_visual_overshoot (overshoot_y);
+ 
+   if (overshoot_x > 0)
+     {
+@@ -2161,6 +2200,9 @@ gtk_scrolled_window_init (GtkScrolledWindow *scrolled_window)
+   g_signal_connect_swapped (priv->drag_gesture, "drag-update",
+                             G_CALLBACK (scrolled_window_drag_update_cb),
+                             scrolled_window);
++  g_signal_connect_swapped (priv->drag_gesture, "drag-end",
++                            G_CALLBACK (scrolled_window_drag_end_cb),
++                            scrolled_window);
+   gtk_widget_add_controller (widget, GTK_EVENT_CONTROLLER (priv->drag_gesture));
+ 
+   priv->pan_gesture = gtk_gesture_pan_new (GTK_ORIENTATION_VERTICAL);
+@@ -2928,13 +2970,45 @@ gtk_scrolled_window_snapshot (GtkWidget   *widget,
+ {
+   GtkScrolledWindow *scrolled_window = GTK_SCROLLED_WINDOW (widget);
+   GtkScrolledWindowPrivate *priv = gtk_scrolled_window_get_instance_private (scrolled_window);
++  int overshoot_x = 0;
++  int overshoot_y = 0;
+ 
+   if (priv->hscrollbar_visible &&
+       priv->vscrollbar_visible &&
+       !priv->use_indicators)
+     gtk_scrolled_window_snapshot_scrollbars_junction (scrolled_window, snapshot);
+ 
+-  GTK_WIDGET_CLASS (gtk_scrolled_window_parent_class)->snapshot (widget, snapshot);
++  if (priv->child != NULL)
++    {
++      GtkAllocation allocation;
++
++      _gtk_scrolled_window_get_overshoot (scrolled_window, &overshoot_x, &overshoot_y);
++      overshoot_x = scrolled_window_get_visual_overshoot (overshoot_x);
++      overshoot_y = scrolled_window_get_visual_overshoot (overshoot_y);
++
++      gtk_scrolled_window_relative_allocation (scrolled_window, &allocation);
++
++      gtk_snapshot_push_clip (snapshot,
++                              &GRAPHENE_RECT_INIT (allocation.x,
++                                                   allocation.y,
++                                                   allocation.width,
++                                                   allocation.height));
++
++      gtk_snapshot_save (snapshot);
++      gtk_snapshot_translate (snapshot,
++                              &GRAPHENE_POINT_INIT (-overshoot_x,
++                                                    -overshoot_y));
++      gtk_widget_snapshot_child (widget, priv->child, snapshot);
++      gtk_snapshot_restore (snapshot);
++
++      gtk_snapshot_pop (snapshot);
++    }
++
++  if (priv->hscrollbar != NULL && gtk_widget_get_child_visible (priv->hscrollbar))
++    gtk_widget_snapshot_child (widget, priv->hscrollbar, snapshot);
++
++  if (priv->vscrollbar != NULL && gtk_widget_get_child_visible (priv->vscrollbar))
++    gtk_widget_snapshot_child (widget, priv->vscrollbar, snapshot);
+ 
+   gtk_scrolled_window_snapshot_undershoot (scrolled_window, snapshot);
+   gtk_scrolled_window_snapshot_overshoot (scrolled_window, snapshot);
+@@ -3341,6 +3415,7 @@ _gtk_scrolled_window_set_adjustment_value (GtkScrolledWindow *scrolled_window,
+ 
+   *prev_value = value;
+   gtk_adjustment_set_value (adjustment, value);
++  gtk_scrolled_window_update_visual_overshoot (scrolled_window);
+ 
+   if (value == lower)
+     edge_pos = vertical ? GTK_POS_TOP : GTK_POS_LEFT;
+@@ -3382,6 +3457,7 @@ scrolled_window_deceleration_cb (GtkWidget         *widget,
+     {
+       priv->unclamped_hadj_value = position;
+       gtk_adjustment_set_value (hadjustment, position);
++      gtk_scrolled_window_update_visual_overshoot (scrolled_window);
+       retval = G_SOURCE_CONTINUE;
+     }
+ 
+@@ -3390,6 +3466,7 @@ scrolled_window_deceleration_cb (GtkWidget         *widget,
+     {
+       priv->unclamped_vadj_value = position;
+       gtk_adjustment_set_value (vadjustment, position);
++      gtk_scrolled_window_update_visual_overshoot (scrolled_window);
+       retval = G_SOURCE_CONTINUE;
+     }
+ 
+@@ -3681,9 +3758,15 @@ gtk_scrolled_window_adjustment_value_changed (GtkAdjustment *adjustment,
+ 
+   /* Ensure GtkAdjustment and unclamped values are in sync */
+   if (adjustment == gtk_scrollbar_get_adjustment (GTK_SCROLLBAR (priv->hscrollbar)))
+-    priv->unclamped_hadj_value = gtk_adjustment_get_value (adjustment);
++    {
++      priv->unclamped_hadj_value = gtk_adjustment_get_value (adjustment);
++      gtk_scrolled_window_update_visual_overshoot (scrolled_window);
++    }
+   else if (adjustment == gtk_scrollbar_get_adjustment (GTK_SCROLLBAR (priv->vscrollbar)))
+-    priv->unclamped_vadj_value = gtk_adjustment_get_value (adjustment);
++    {
++      priv->unclamped_vadj_value = gtk_adjustment_get_value (adjustment);
++      gtk_scrolled_window_update_visual_overshoot (scrolled_window);
++    }
+ }
+ 
+ static gboolean
+-- 
+2.54.0

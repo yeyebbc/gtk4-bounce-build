@@ -1,0 +1,13 @@
+{
+  "source": "gtk4",
+  "base_version": "4.14.5+ds-0ubuntu0.10",
+  "version": "4.14.5+ds-0ubuntu0.10+bounce1",
+  "architecture": "amd64",
+  "ubuntu_codename": "noble",
+  "archive": "https://archive.ubuntu.com/ubuntu/pool/main/g/gtk4/",
+  "files": {
+    "gtk4_4.14.5+ds-0ubuntu0.10.dsc": "04ace1e47b9d3a94c876f34c10b0e7d8507dc58e5517e8951f30932afcb12126",
+    "gtk4_4.14.5+ds.orig.tar.xz": "bd52b294cd18784339b105e2f25d2569e3db94411c64b9b141b23fe39118a0e5",
+    "gtk4_4.14.5+ds-0ubuntu0.10.debian.tar.xz": "17692a86b96fa9bc930f744694c02a43f7a048abdfb1f9864fe2b9925f649d00"
+  }
+}

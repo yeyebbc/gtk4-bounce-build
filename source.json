@@ -1,7 +1,8 @@
 {
   "source": "gtk4",
   "base_version": "4.14.5+ds-0ubuntu0.10",
-  "version": "4.14.5+ds-0ubuntu0.10+bounce1",
+  "version": "4.14.5+ds-0ubuntu0.10+bounce2",
+  "build_profiles": ["nodoc", "noinsttest", "noudeb"],
   "architecture": "amd64",
   "ubuntu_codename": "noble",
   "archive": "https://archive.ubuntu.com/ubuntu/pool/main/g/gtk4/",

@@ -71,7 +71,7 @@ def main():
     print(f"{args.mode.capitalize()} {len(selected)} currently installed GTK packages:", flush=True)
     for path in selected:
         print(f"  {Path(path).name}", flush=True)
-    command = ["apt-get", "--no-remove"]
+    command = ["apt-get", "--no-remove", "--no-install-recommends"]
     if args.dry_run:
         command.append("--simulate")
     if args.mode == "rollback":

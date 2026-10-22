@@ -46,11 +46,19 @@ def main():
     series.write_text(series.read_text().rstrip() + "\nbounce-gtk-4.14.5.patch\n")
     subprocess.run(["dpkg-source", "--before-build", str(SOURCE)], check=True)
 
+    # The declared Debian build profiles omit auxiliary binary packages.
+    # Avoid compiling their uninstalled test executables as well. Runtime
+    # backends, compiler hardening/LTO and packaging ABI checks are unchanged.
+    rules = SOURCE / "debian/rules"
+    rules.write_text(rules.read_text() + "\n# Desktop package CI; focused tests run after installation.\n"
+                     "configure_flags_deb += -Dbuild-tests=false -Dbuild-testsuite=false\n")
     changelog = SOURCE / "debian/changelog"
     entry = (
         f"gtk4 ({CONFIG['version']}) noble; urgency=medium\n\n"
         "  * Backport Christian Hergert's GtkScrolledWindow bounce scrolling patch.\n"
         "  * Preserve the Ubuntu source, existing patch series and package layout.\n\n"
+        "  * Build desktop packages with nodoc, noinsttest and noudeb profiles;\n"
+        "    run focused upstream tests against the installed library in CI.\n\n"
         f" -- Local GTK Builder <builder@localhost>  {format_datetime(datetime.now(timezone.utc))}\n\n"
     )
     changelog.write_text(entry + changelog.read_text())

@@ -6,6 +6,7 @@ cd "$repo_dir"
 . /etc/os-release
 [[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
 [[ $(dpkg --print-architecture) == amd64 ]]
+export DEB_BUILD_PROFILES='nodoc noinsttest noudeb'
 
 python3 scripts/prepare-source.py
 mkdir -p _build/deps
@@ -24,10 +25,6 @@ jobs=$(nproc)
   DEB_BUILD_OPTIONS="parallel=$jobs nocheck" dpkg-buildpackage -b -us -uc
 )
 
-env GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
-  xvfb-run -a dbus-run-session -- \
-  meson test -C _build/gtk4/debian/build/deb --no-rebuild --print-errorlogs scrolledwindow
-
 # Verify the produced library and headers together, installed inside this CI
 # runner. These commands never execute on the user's machine.
 core_packages=(libgtk-4-1 libgtk-4-common libgtk-4-bin libgtk-4-dev libgtk-4-media-gstreamer gir1.2-gtk-4.0)
@@ -38,8 +35,13 @@ for package in "${core_packages[@]}"; do
   core_debs+=("${matches[0]}")
 done
 sudo apt-get --yes --no-remove --no-install-recommends install "${core_debs[@]}"
+mkdir -p _build/test-config
+cc -Wall -Wextra _build/gtk4/testsuite/gtk/scrolledwindow.c \
+  -o _build/scrolledwindow $(pkg-config --cflags --libs gtk4)
+env XDG_CONFIG_HOME="$repo_dir/_build/test-config" GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none GSETTINGS_BACKEND=memory LIBGL_ALWAYS_SOFTWARE=1 \
+  xvfb-run -a dbus-run-session -- _build/scrolledwindow --tap -k
 cc -Wall -Wextra -Werror scripts/render-smoke.c -o _build/render-smoke $(pkg-config --cflags --libs gtk4)
-env GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
+env XDG_CONFIG_HOME="$repo_dir/_build/test-config" GDK_BACKEND=x11 GSK_RENDERER=cairo GTK_A11Y=none LIBGL_ALWAYS_SOFTWARE=1 \
   xvfb-run -a dbus-run-session -- _build/render-smoke
 
 python3 scripts/bundle.py

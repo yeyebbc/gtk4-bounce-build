@@ -2,8 +2,9 @@
 
 GitHub Actions builds Christian Hergert's [bounce scrolling patch](https://gist.github.com/chergert/91b4feb1e359c916bcf86ae2ea1f5044)
 as native Ubuntu packages for **amd64**, based on the exact Ubuntu source
-**4.14.5+ds-0ubuntu0.10**. All existing Ubuntu patches and packaging rules remain
-in the build. The custom package version is **4.14.5+ds-0ubuntu0.10+bounce1**.
+**4.14.5+ds-0ubuntu0.10**. The build keeps Ubuntu's patches, runtime backends,
+compiler hardening/optimization and ABI checks. The custom version is
+**4.14.5+ds-0ubuntu0.10+bounce2**.
 
 ## Download and install
 
@@ -40,7 +41,7 @@ The same command can be run from a text console with **Ctrl+Alt+F3**. Log out
 and back in, or reboot, after rollback.
 
 No package holds or APT pins are added. A later Ubuntu revision upgrades over
-`+bounce1` normally, so the patch must be rebuilt against future Ubuntu updates.
+`+bounce2` normally, so the patch must be rebuilt against future Ubuntu updates.
 The installer refuses a bundle whose base does not match the installed GTK.
 
 ## Build and validation
@@ -51,12 +52,15 @@ The build downloads Ubuntu's original source and Debian patch archive, applies
 the existing distro patch series, and adds the bounce patch as the last patch.
 The only backport change removes a context line absent from GTK 4.14.5.
 
-CI uses the standard `dpkg-buildpackage` build and ABI checks. It then runs
-the upstream `scrolledwindow` tests under Xvfb, installs the resulting runtime
-and development packages inside the runner, and compiles/runs a rendering and
-scroll-boundary smoke test. The complete upstream display/font/GPU test matrix
-is skipped (`nocheck` during packaging); focused tests run separately. Physical
-input behavior and the animation's feel need manual testing on the machine.
+CI uses `dpkg-buildpackage` with Ubuntu's supported `nodoc`, `noinsttest` and
+`noudeb` profiles to build the six desktop packages. It disables compilation
+of the large auxiliary test suite and manual test programs. It then installs
+the runtime and development packages inside the runner, compiles/runs the
+upstream `scrolledwindow` tests against that installed library under Xvfb,
+and runs a rendering/scroll-boundary smoke test. The complete upstream
+display/font/GPU test matrix is skipped (`nocheck` during packaging); focused
+tests run separately. Physical input behavior and the animation's feel need
+manual testing on the machine.
 
 The artifact includes rebuilt packages, official rollback packages, SHA256
 checksums, source/patch/build provenance, and install/rollback helpers. Separate

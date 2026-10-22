@@ -63,8 +63,9 @@ def main():
     info = {
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "run_url": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
-        "validation": ["Ubuntu packaging and ABI checks", "upstream scrolledwindow tests under Xvfb",
+        "validation": ["Ubuntu packaging and ABI checks", "upstream scrolledwindow tests against installed library under Xvfb",
                        "installed library rendering/scroll-boundary smoke test"],
+        "build_profiles": CONFIG["build_profiles"],
         "full_test_suite": "not run; dpkg build uses nocheck and focused tests run separately",
         "physical_touchpad_test": "requires manual testing after installation",
     }

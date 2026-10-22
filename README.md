@@ -76,3 +76,7 @@ backport, not a fork of the toolkit.
 See [the separate Flatpak build](flatpak/README.md) for a runtime-compatible
 GTK 4.22.5 library and reversible per-app overrides. The Ubuntu .deb build
 above is independent of this artifact.
+
+The local Flatpak app registry is in `flatpak-apps.json`. Run
+`bash enable-flatpak.sh APP_ID` to enable a registered app with the downloaded
+library. The original bundle's runtime and GTK source checks still apply.

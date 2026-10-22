@@ -15,13 +15,19 @@ if [[ "$arch" == i386 ]]; then
   sudo dpkg --add-architecture i386
   sudo apt-get update
   sudo apt-get install --yes --no-install-recommends crossbuild-essential-i386 qemu-user
+  export DEB_BUILD_PROFILES="$DEB_BUILD_PROFILES cross"
+  # Explicitly select the modern cross-friendly introspection packages instead
+  # of the historical libgirepository1.0-dev alternatives in the source control.
+  sudo apt-get install --yes --no-install-recommends \
+    gobject-introspection:i386 gir1.2-freedesktop-dev:i386 \
+    libgdk-pixbuf-2.0-dev:i386 libpango1.0-dev:i386 libjson-glib-dev:amd64
 fi
 (
   cd "$build_dir/deps"
   sudo mk-build-deps --install --remove \
     --build-arch amd64 --host-arch "$arch" \
     --build-profiles "${DEB_BUILD_PROFILES// /,}" \
-    --tool 'apt-get --yes --no-install-recommends' ../source/debian/control
+    --tool 'apt-get --yes --no-remove --no-install-recommends -o Debug::pkgProblemResolver=true' ../source/debian/control
 )
 sudo apt-get install --yes --no-install-recommends "libgtk-3-0t64:$arch"
 jobs=$(nproc)

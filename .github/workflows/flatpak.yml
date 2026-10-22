@@ -31,7 +31,7 @@ jobs:
       - name: Install Flatpak build tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends flatpak flatpak-builder python3 xvfb xauth dbus-daemon
+          sudo apt-get install --yes --no-install-recommends flatpak flatpak-builder elfutils python3 xvfb xauth dbus-daemon
           # Allow bubblewrap user namespaces inside this disposable CI runner.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 

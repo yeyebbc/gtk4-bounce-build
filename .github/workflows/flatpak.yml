@@ -1,0 +1,67 @@
+name: Build Flatpak GTK bounce library
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/flatpak.yml
+      - flatpak/**
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: gtk4-flatpak-bounce-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends flatpak flatpak-builder python3 xvfb xauth dbus-daemon
+          # Allow bubblewrap user namespaces inside this disposable CI runner.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Install pinned GNOME 50 runtime and SDK
+        run: |
+          flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak --user install --noninteractive --assumeyes flathub org.gnome.Platform//50 org.gnome.Sdk//50
+          flatpak --user update --noninteractive --assumeyes --commit=0bd5091046708e64bc882e8349877cfbae713f6a1e2d0487a5f10af820a2d792 org.gnome.Platform//50
+          flatpak --user update --noninteractive --assumeyes --commit=d49a7ee8ab1603c2df0e567ea31fed9104fd97efd46aba9fae54fc227e9aa04f org.gnome.Sdk//50
+          test "$(flatpak --user info --show-commit org.gnome.Platform//50)" = 0bd5091046708e64bc882e8349877cfbae713f6a1e2d0487a5f10af820a2d792
+          test "$(flatpak --user info --show-commit org.gnome.Sdk//50)" = d49a7ee8ab1603c2df0e567ea31fed9104fd97efd46aba9fae54fc227e9aa04f
+
+      - name: Compile in GNOME SDK and test in GNOME Platform
+        run: bash flatpak/build.sh 2>&1 | tee flatpak-build.log
+
+      - name: Upload library and reversible app overrides
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gtk4-bounce-gnome50-x86_64
+          path: dist/gtk4-bounce-gnome50-x86_64.tar.gz
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload build and test logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gtk4-bounce-flatpak-build-logs
+          path: |
+            flatpak-build.log
+            _flatpak/state/build/gtk-bounce-*/_bounce_build/meson-logs/
+          if-no-files-found: warn
+          retention-days: 30

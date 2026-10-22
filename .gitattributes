@@ -1,0 +1,2 @@
+# Unified patch context and mail trailers intentionally contain whitespace.
+*.patch -whitespace

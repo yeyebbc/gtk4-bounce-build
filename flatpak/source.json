@@ -1,0 +1,15 @@
+{
+  "runtime": "org.gnome.Platform/x86_64/50",
+  "sdk": "org.gnome.Sdk/x86_64/50",
+  "runtime_commit": "0bd5091046708e64bc882e8349877cfbae713f6a1e2d0487a5f10af820a2d792",
+  "sdk_commit": "d49a7ee8ab1603c2df0e567ea31fed9104fd97efd46aba9fae54fc227e9aa04f",
+  "gtk_version": "4.22.5",
+  "library": "libgtk-4.so.1.2200.5",
+  "source_url": "https://download.gnome.org/sources/gtk/4.22/gtk-4.22.5.tar.xz",
+  "source_sha256": "7fd725deb2cb3f8dc218ad862c5056ff8548f49d3b0e4081796e444c22d19686",
+  "apps": [
+    "com.github.tchx84.Flatseal",
+    "io.gitlab.news_flash.NewsFlash",
+    "net.nokyan.Resources"
+  ]
+}

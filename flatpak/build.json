@@ -1,0 +1,44 @@
+{
+  "app-id": "io.github.yeyebbc.GtkBounce",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "50",
+  "sdk": "org.gnome.Sdk",
+  "command": "gtk-bounce-smoke",
+  "modules": [
+    {
+      "name": "gtk-bounce",
+      "buildsystem": "simple",
+      "build-commands": [
+        "test \"$(pkg-config --modversion gtk4)\" = 4.22.5",
+        "meson setup _bounce_build --prefix=/usr --libdir=lib/x86_64-linux-gnu --buildtype=release -Dbroadway-backend=true -Dsysprof=enabled -Dintrospection=disabled -Ddocumentation=false -Dman-pages=false -Dbuild-demos=false -Dbuild-tests=false -Dbuild-testsuite=false -Dbuild-examples=false",
+        "ninja -C _bounce_build -j2 gtk/libgtk-4.so.1.2200.5",
+        "install -Dm755 _bounce_build/gtk/libgtk-4.so.1.2200.5 /app/lib/gtk-bounce/libgtk-4.so.1.2200.5",
+        "ln -s libgtk-4.so.1.2200.5 /app/lib/gtk-bounce/libgtk-4.so.1",
+        "python3 abi-check.py /usr/lib/x86_64-linux-gnu/libgtk-4.so.1 /app/lib/gtk-bounce/libgtk-4.so.1",
+        "install -d /app/bin",
+        "cc -Wall -Wextra -Werror render-smoke.c -o /app/bin/gtk-bounce-smoke $(pkg-config --cflags --libs gtk4) -ldl",
+        "cc -Wall -Wextra testsuite/gtk/scrolledwindow.c -o /app/bin/scrolledwindow $(pkg-config --cflags --libs gtk4)",
+        "install -Dm644 COPYING /app/share/licenses/gtk-bounce/COPYING"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://download.gnome.org/sources/gtk/4.22/gtk-4.22.5.tar.xz",
+          "sha256": "7fd725deb2cb3f8dc218ad862c5056ff8548f49d3b0e4081796e444c22d19686"
+        },
+        {
+          "type": "patch",
+          "path": "bounce.patch"
+        },
+        {
+          "type": "file",
+          "path": "render-smoke.c"
+        },
+        {
+          "type": "file",
+          "path": "abi-check.py"
+        }
+      ]
+    }
+  ]
+}

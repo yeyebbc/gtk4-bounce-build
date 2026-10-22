@@ -2,3 +2,6 @@ _build/
 _build-check/
 dist/
 __pycache__/
+_flatpak/
+installed/
+flatpak-build.log

@@ -70,3 +70,9 @@ are retained for 90 days; downloaded copies do not expire.
 GTK source licensing and notices are preserved in the packages. The patch is
 by Christian Hergert; this repository contains build helpers and its GTK 4.14.5
 backport, not a fork of the toolkit.
+
+## GNOME 50 Flatpak applications
+
+See [the separate Flatpak build](flatpak/README.md) for a runtime-compatible
+GTK 4.22.5 library and reversible per-app overrides. The Ubuntu .deb build
+above is independent of this artifact.

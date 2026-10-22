@@ -81,6 +81,18 @@ The local Flatpak app registry is in `flatpak-apps.json`. Run
 `bash enable-flatpak.sh APP_ID` to enable a registered app with the downloaded
 library. The original bundle's runtime and GTK source checks still apply.
 
-## GTK 3 source port
+## GTK 3 system packages
 
-See [the GTK 3 bounce patch and CI tests](gtk3/README.md) for GTK 3.24.41.
+The **Build GTK 3 bounce system packages** workflow builds the GTK 3.24.41 port
+as matching **amd64 + i386** Ubuntu noble packages. Download and extract its
+**gtk3-bounce-noble-multiarch** artifact, then run:
+
+    bash install.sh --dry-run
+    bash install.sh
+
+The helper replaces only GTK 3 packages already installed, including both
+architectures, and refuses removals. The artifact includes the exact original
+Ubuntu packages; run `bash rollback.sh` to restore them. Restart applications
+or log out and back in after changing the system library.
+
+See [the GTK 3 patch, packaging and CI tests](gtk3/README.md) for details.

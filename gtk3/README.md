@@ -26,9 +26,25 @@ rebound, fixed scrollbar positions and realize/unrealize/add/remove lifecycle.
 The same events are run against stock GTK as a negative control. Exported ABI
 symbols and upstream scrolledwindow sizing tests are also checked.
 
-This deliverable is a source patch and validation bundle. No installed GTK 3
-packages are modified. The target machine has both amd64 and i386 GTK 3
-libraries installed; a system replacement needs matching multiarch packages,
-rather than installing only an amd64 build. Physical touchpad feel, input
-methods, accessibility and the complete GTK test matrix still need broader
-manual validation before deployment as a system library.
+The **Build GTK 3 bounce system packages** workflow also produces an
+install/rollback bundle for Ubuntu noble / Linux Mint 22.x. It builds matching
+amd64 and i386 Debian packages at version **3.24.41-4ubuntu1.3+bounce1**, retaining
+Ubuntu hardening, runtime backends, GIR data and strict package symbol checks.
+Only docs, installer udebs and the auxiliary examples package are omitted.
+Native C regression clients exercise both 32-bit and 64-bit package contents.
+
+Extract the `gtk3-bounce-noble-multiarch` artifact and run:
+
+```bash
+bash install.sh --dry-run
+bash install.sh
+```
+
+The installer verifies checksums and versions and selects only the GTK 3 packages
+already installed, including matching multiarch libraries. Log out and back in,
+or reboot, after installation. Run `bash rollback.sh` to restore the exact stock
+packages included in the bundle. See [INSTALL.txt](INSTALL.txt) for details.
+
+No APT holds or pins are created. Native system replacement does not change
+Flatpak/Snap runtimes. Physical touchpad feel, input methods, accessibility and
+the complete GTK test matrix still need manual validation.

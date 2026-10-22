@@ -1,0 +1,36 @@
+GTK 3 bounce scrolling for Ubuntu noble / Linux Mint 22.x
+=======================================================
+
+This bundle replaces native system GTK 3 packages with
+3.24.41-4ubuntu1.3+bounce1, based on Ubuntu's exact 3.24.41-4ubuntu1.3
+source plus the GTK 3 bounce port. Compilation and regression testing
+happen in GitHub Actions. Both amd64 and i386 packages are included.
+
+From this extracted directory, preview the APT transaction:
+  bash install.sh --dry-run
+
+Install:
+  bash install.sh
+
+The helper verifies checksums, OS, architecture and installed package
+versions. It selects only GTK 3 packages already installed on your machine,
+including both architectures, and uses apt-get --no-remove. It asks for
+sudo and shows APT's transaction for you to confirm.
+
+Log out and back in, or reboot, so applications load the new GTK library.
+
+Rollback to the original Ubuntu packages bundled here:
+  bash rollback.sh
+This permits the expected version downgrade and likewise refuses removals.
+
+No package holds or APT pins are created. A later Ubuntu package revision
+can supersede this custom version. Use apt-mark hold on the installed GTK 3
+package names if you want to retain this version across updates, and unhold
+them when you want to return to Ubuntu updates.
+
+This changes native system GTK 3 applications. Flatpak and Snap runtimes
+have their own libraries and are independent of the system replacement.
+
+provenance/build.json identifies the CI commit, run and test coverage.
+The full display/GPU/accessibility test matrix and physical touchpad feel
+are outside the automated regression checks.

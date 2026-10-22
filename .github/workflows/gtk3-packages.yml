@@ -1,0 +1,85 @@
+name: Build GTK 3 bounce system packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/gtk3-packages.yml
+      - gtk3/**
+      - bundle/**
+      - flatpak/abi-check.py
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: gtk3-system-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, i386]
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install packaging and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential devscripts equivs dpkg-dev meson ninja-build \
+            python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 \
+            xvfb xauth dbus-daemon adwaita-icon-theme libgl1-mesa-dri
+      - name: Build and test Debian packages
+        run: bash gtk3/package.sh "${{ matrix.architecture }}" 2>&1 | tee gtk3-package.log
+      - name: Upload tested packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gtk3-packages-${{ matrix.architecture }}
+          path: dist/gtk3-packages-${{ matrix.architecture }}/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload build and regression logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gtk3-package-logs-${{ matrix.architecture }}
+          path: |
+            gtk3-package.log
+            _gtk3/packages/${{ matrix.architecture }}/source/debian/build/deb/meson-logs/
+            _gtk3/packages/${{ matrix.architecture }}/test-output/
+          if-no-files-found: warn
+          retention-days: 30
+  bundle:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: gtk3-packages-*
+          path: _gtk3/incoming/
+      - name: Assemble verified install and rollback bundle
+        run: /usr/bin/python3 gtk3/bundle.py
+      - name: Upload system install bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gtk3-bounce-noble-multiarch
+          path: dist/gtk3-bounce-noble-multiarch/
+          if-no-files-found: error
+          retention-days: 90

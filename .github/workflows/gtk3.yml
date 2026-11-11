@@ -33,7 +33,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Compile GTK 3 and validate bounce behavior
-        run: bash gtk3/build.sh 2>&1 | tee gtk3-build.log
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          bash gtk3/build.sh 2>&1 | tee gtk3-build.log
       - name: Upload validated source patch
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

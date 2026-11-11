@@ -24,7 +24,7 @@ xvfb-run -a dbus-run-session -- env G_DEBUG=fatal-criticals /usr/bin/python3 gtk
 cc -Wall -Wextra _gtk3/source/testsuite/gtk/scrolledwindow.c \
   -o _gtk3/scrolledwindow $(pkg-config --cflags --libs gtk+-3.0)
 xvfb-run -a dbus-run-session -- _gtk3/scrolledwindow
-mkdir -p dist/gtk3-bounce-3.24.41
-cp gtk3/patches/gtk3-3.24.41-bounce.patch gtk3/README.md gtk3/source.json dist/gtk3-bounce-3.24.41/
-cp gtk3/test-bounce.py dist/gtk3-bounce-3.24.41/
-git rev-parse HEAD > dist/gtk3-bounce-3.24.41/BUILD_COMMIT
+mkdir -p dist/gtk3-bounce-3.24.49
+cp gtk3/patches/gtk3-3.24.41-bounce.patch gtk3/README.md gtk3/source.json dist/gtk3-bounce-3.24.49/
+cp gtk3/test-bounce.py dist/gtk3-bounce-3.24.49/
+git rev-parse HEAD > dist/gtk3-bounce-3.24.49/BUILD_COMMIT

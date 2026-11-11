@@ -1,9 +1,9 @@
-name: Build GTK 3 bounce system packages
+name: Build Debian 13 GTK 3 bounce system packages
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [codex/debian13-gnome48]
     paths:
       - .github/workflows/gtk3-packages.yml
       - gtk3/**
@@ -24,6 +24,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    container: debian:13
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -32,33 +33,16 @@ jobs:
     env:
       DEBIAN_FRONTEND: noninteractive
     steps:
+      - name: Install packaging and test tools
+        run: |
+          apt-get update
+          apt-get install --yes --no-install-recommends \
+            ca-certificates git sudo build-essential devscripts equivs dpkg-dev meson ninja-build \
+            python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 \
+            xvfb xauth dbus-daemon adwaita-icon-theme libgl1-mesa-dri
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Use the official Ubuntu HTTPS mirror
-        run: |
-          sudo /usr/bin/python3 - <<'PY'
-          from pathlib import Path
-          for path in Path("/etc/apt").glob("*mirrors*.txt"):
-              path.write_text("https://archive.ubuntu.com/ubuntu/\n")
-          paths = list(Path("/etc/apt/sources.list.d").glob("*.sources"))
-          paths += [Path("/etc/apt/sources.list")]
-          for path in paths:
-              if path.is_file():
-                  text = path.read_text()
-                  text = text.replace("http://azure.archive.ubuntu.com/ubuntu", "https://archive.ubuntu.com/ubuntu")
-                  path.write_text(text)
-          Path("/etc/apt/apt.conf.d/90gtk-bounce-ci").write_text(
-              'Acquire::ForceIPv4 "true";\nAcquire::Retries "2";\n'
-              'Acquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n')
-          PY
-      - name: Install packaging and test tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            build-essential devscripts equivs dpkg-dev meson ninja-build \
-            python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 \
-            xvfb xauth dbus-daemon adwaita-icon-theme libgl1-mesa-dri
       - name: Build and test Debian packages
         run: bash gtk3/package.sh "${{ matrix.architecture }}" 2>&1 | tee gtk3-package.log
       - name: Upload tested packages
@@ -96,7 +80,7 @@ jobs:
       - name: Upload system install bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: gtk3-bounce-noble-multiarch
-          path: dist/gtk3-bounce-noble-multiarch/
+          name: gtk3-bounce-trixie-multiarch
+          path: dist/gtk3-bounce-trixie-multiarch/
           if-no-files-found: error
           retention-days: 90

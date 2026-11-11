@@ -9,7 +9,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / "gtk3/source.json").read_text())
-DIST = ROOT / "dist/gtk3-bounce-noble-multiarch"
+DIST = ROOT / "dist/gtk3-bounce-trixie-multiarch"
 
 def metadata(path):
     fields = ("Package", "Version", "Architecture", "Source")
@@ -50,11 +50,11 @@ def main():
         shutil.copytree(incoming / "provenance", provenance)
     required = {("libgtk-3-0t64", "amd64"), ("libgtk-3-0t64", "i386"),
                 ("libgtk-3-common", "all"), ("libgtk-3-bin", "amd64"),
-                ("libgail-3-0t64", "amd64"), ("gtk-update-icon-cache", "amd64"),
+                ("libgail-3-0t64", "amd64"),
                 ("gir1.2-gtk-3.0", "amd64")}
     assert required <= seen, required - seen
     manifest = {key: CONFIG[key] for key in
-                ("source", "base_version", "version", "architecture", "ubuntu_codename", "architectures")}
+                ("source", "base_version", "version", "architecture", "debian_codename", "architectures")}
     manifest["packages"] = records
     (DIST / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     for name in ("manage.py", "install.sh", "rollback.sh"):
@@ -72,7 +72,7 @@ def main():
         "commit": commit,
         "run_url": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
         "validation": [
-            "Ubuntu Debian packaging and strict GTK/GDK symbol checks",
+            "Debian packaging and strict GTK/GDK symbol checks",
             "Exported GTK/GDK ABI compared with stock on amd64 and i386",
             "24 stock and 24 patched native C smooth-scroll cases per architecture",
             "24 stock and 24 patched Python GI scroll cases on amd64",

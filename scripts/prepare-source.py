@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the pinned Ubuntu source and append the bounce backport to its series."""
+"""Fetch the pinned Debian source and append the existing bounce patch."""
 
 import hashlib
 import json
@@ -34,7 +34,7 @@ def main():
 
     dsc = DOWNLOADS / f"gtk4_{CONFIG['base_version']}.dsc"
     # Every input, including the .dsc, has been checked against pinned SHA256s.
-    # This avoids requiring a particular Ubuntu signing key in a fresh runner.
+    # This avoids requiring a particular Debian signing key in a fresh runner.
     subprocess.run(["dpkg-source", "--no-check", "-x", str(dsc), str(SOURCE)], check=True)
     patch = ROOT / "patches/bounce-gtk-4.14.5.patch"
     subprocess.run(
@@ -54,9 +54,9 @@ def main():
                      "configure_flags_deb += -Dbuild-tests=false -Dbuild-testsuite=false\n")
     changelog = SOURCE / "debian/changelog"
     entry = (
-        f"gtk4 ({CONFIG['version']}) noble; urgency=medium\n\n"
+        f"gtk4 ({CONFIG['version']}) {CONFIG['debian_codename']}; urgency=medium\n\n"
         "  * Backport Christian Hergert's GtkScrolledWindow bounce scrolling patch.\n"
-        "  * Preserve the Ubuntu source, existing patch series and package layout.\n\n"
+        "  * Preserve the Debian source, existing patch series and package layout.\n\n"
         "  * Build desktop packages with nodoc, noinsttest and noudeb profiles;\n"
         "    run focused upstream tests against the installed library in CI.\n\n"
         f" -- Local GTK Builder <builder@localhost>  {format_datetime(datetime.now(timezone.utc))}\n\n"

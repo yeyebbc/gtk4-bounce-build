@@ -4,7 +4,7 @@ set -euo pipefail
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_dir"
 . /etc/os-release
-[[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
+[[ "$ID" == debian && "$VERSION_ID" == 13 && "$VERSION_CODENAME" == trixie ]]
 [[ $(dpkg --print-architecture) == amd64 ]]
 export DEB_BUILD_PROFILES='nodoc noinsttest noudeb'
 
@@ -13,6 +13,7 @@ mkdir -p _build/deps
 (
   cd _build/deps
   sudo mk-build-deps --install --remove \
+    --build-profiles "${DEB_BUILD_PROFILES// /,}" \
     --tool 'apt-get --yes --no-install-recommends' ../gtk4/debian/control
 )
 
@@ -20,14 +21,14 @@ jobs=$(nproc)
 (( jobs <= 2 )) || jobs=2
 (
   cd _build/gtk4
-  # Keep Ubuntu's build rules and ABI checks. Run focused tests below instead
+  # Keep Debian's build rules and ABI checks. Run focused tests below instead
   # of the full display/font/GPU-dependent X11 and Wayland test matrix.
   DEB_BUILD_OPTIONS="parallel=$jobs nocheck" dpkg-buildpackage -b -us -uc
 )
 
 # Verify the produced library and headers together, installed inside this CI
 # runner. These commands never execute on the user's machine.
-core_packages=(libgtk-4-1 libgtk-4-common libgtk-4-bin libgtk-4-dev libgtk-4-media-gstreamer gir1.2-gtk-4.0)
+core_packages=(libgtk-4-1 libgtk-4-common libgtk-4-bin libgtk-4-dev libgtk-4-media-gstreamer gir1.2-gtk-4.0 gtk-update-icon-cache)
 core_debs=()
 for package in "${core_packages[@]}"; do
   matches=("$repo_dir/_build/${package}_"*.deb)

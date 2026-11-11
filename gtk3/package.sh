@@ -5,7 +5,7 @@ cd "$repo_dir"
 arch=${1:?Usage: package.sh amd64|i386}
 [[ "$arch" == amd64 || "$arch" == i386 ]]
 . /etc/os-release
-[[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
+[[ "$ID" == debian && "$VERSION_ID" == 13 && "$VERSION_CODENAME" == trixie ]]
 [[ $(dpkg --print-architecture) == amd64 ]]
 export DEB_BUILD_PROFILES='nodoc noudeb nocheck pkg.gtk3.noexamples'
 build_dir="$repo_dir/_gtk3/packages/$arch"

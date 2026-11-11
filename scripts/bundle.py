@@ -10,9 +10,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / "source.json").read_text())
-DIST = ROOT / "dist/gtk4-bounce-noble-amd64"
+DIST = ROOT / "dist/gtk4-bounce-trixie-amd64"
 CORE = {"libgtk-4-1", "libgtk-4-common", "libgtk-4-bin", "libgtk-4-dev",
-        "libgtk-4-media-gstreamer", "gir1.2-gtk-4.0"}
+        "libgtk-4-media-gstreamer", "gir1.2-gtk-4.0", "gtk-update-icon-cache"}
 
 
 def metadata(path):
@@ -47,7 +47,7 @@ def main():
                         "file": str(relative), "rollback_file": str(originals[0].relative_to(DIST))})
     assert CORE <= {record["name"] for record in records}, records
     manifest = {key: CONFIG[key] for key in
-                ("source", "base_version", "version", "architecture", "ubuntu_codename")}
+                ("source", "base_version", "version", "architecture", "debian_codename")}
     manifest["packages"] = records
     (DIST / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     for helper in (ROOT / "bundle").iterdir():
@@ -63,7 +63,7 @@ def main():
     info = {
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "run_url": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
-        "validation": ["Ubuntu packaging and ABI checks", "upstream scrolledwindow tests against installed library under Xvfb",
+        "validation": ["Debian packaging and ABI checks", "upstream scrolledwindow tests against installed library under Xvfb",
                        "installed library rendering/scroll-boundary smoke test"],
         "build_profiles": CONFIG["build_profiles"],
         "full_test_suite": "not run; dpkg build uses nocheck and focused tests run separately",

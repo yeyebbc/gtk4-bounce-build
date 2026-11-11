@@ -1,19 +1,19 @@
 {
   "source": "gtk+3.0",
-  "version": "3.24.41-4ubuntu1.3+bounce1",
-  "base_version": "3.24.41-4ubuntu1.3",
-  "archive": "https://archive.ubuntu.com/ubuntu/pool/main/g/gtk+3.0/",
+  "version": "3.24.49-3+bounce1",
+  "base_version": "3.24.49-3",
+  "archive": "https://deb.debian.org/debian/pool/main/g/gtk+3.0/",
   "files": {
-    "gtk+3.0_3.24.41-4ubuntu1.3.dsc": "b7ea9dda7ffd3f01f97d7ee673f130a82db5b346ade2d003e609e27886b35269",
-    "gtk+3.0_3.24.41.orig.tar.xz": "47da61487af3087a94bc49296fd025ca0bc02f96ef06c556e7c8988bd651b6fa",
-    "gtk+3.0_3.24.41-4ubuntu1.3.debian.tar.xz": "1a82c70d722296f15af0a00a737a0c552580c6bf3f527f9ef7e66f192fe1831c"
+    "gtk+3.0_3.24.49-3.dsc": "513599dc090f48106d1e2fc4d570c4d6e682e52e0ce6c059ea0218f624d48e22",
+    "gtk+3.0_3.24.49.orig.tar.xz": "5ea52c6a28f0e5ecf2e9a3c2facbb30d040b73871fcd5f33cd1317e9018a146e",
+    "gtk+3.0_3.24.49-3.debian.tar.xz": "0d20b6ef612ca462929f0f27ad0e359881938a7e44088687f2ce632a4bc0fcd7"
   },
   "architecture": "amd64",
   "architectures": [
     "amd64",
     "i386"
   ],
-  "ubuntu_codename": "noble",
+  "debian_codename": "trixie",
   "build_profiles": [
     "nodoc",
     "noudeb",

@@ -39,9 +39,10 @@ def main():
         if "=" in line:
             key, value = line.split("=", 1)
             release[key] = value.strip('"')
-    codename = release.get("UBUNTU_CODENAME", release.get("VERSION_CODENAME"))
-    if codename != manifest["ubuntu_codename"]:
-        fail(f"This bundle targets Ubuntu noble / Linux Mint 22.x; found {codename!r}.")
+    codename = release.get("VERSION_CODENAME")
+    if (release.get("ID") != "debian" or release.get("VERSION_ID") != "13"
+            or codename != manifest["debian_codename"]):
+        fail(f"This bundle targets Debian 13 (trixie); found {release.get('PRETTY_NAME', codename)!r}.")
 
     format_string = "${Package}\t${Architecture}\t${Version}\t${source:Package}\t${db:Status-Status}\n"
     installed = subprocess.check_output(["dpkg-query", "-W", "-f=" + format_string], text=True)

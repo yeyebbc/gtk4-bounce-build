@@ -1,9 +1,10 @@
-# GTK 3.24.41 bounce scrolling source patch
+# GTK 3.24.49 bounce scrolling for Debian 13
 
 This is a GTK 3 port of Christian Hergert's
 [bounce patch](https://gist.github.com/chergert/91b4feb1e359c916bcf86ae2ea1f5044).
-It targets the exact Ubuntu/Mint source **3.24.41-4ubuntu1.3**, after its distro
-patches are applied. The patch is independent of CPU architecture.
+This branch targets the exact Debian 13 source **3.24.49-3**, after its distro
+patches are applied. The existing `gtk3-3.24.41-bounce.patch` applies unchanged
+with zero fuzz and is independent of CPU architecture.
 
 The port retains the GTK 4 patch's overshoot distance, visual resistance and
 spring friction. GTK 3 uses two private GdkWindows to clip and move content
@@ -11,14 +12,14 @@ while keeping native text/tree view windows, input coordinates and scrollbars
 consistent. It redraws the full viewport and restores the final zero-offset
 frame. Existing smooth-scroll rebound and touch drag-end handling are used.
 
-Apply after extracting the Ubuntu source:
+Apply after extracting the Debian source:
 
 ```bash
 patch --dry-run --batch --fuzz=0 -p1 -i /path/to/gtk3-3.24.41-bounce.patch
 patch --batch --fuzz=0 -p1 -i /path/to/gtk3-3.24.41-bounce.patch
 ```
 
-The GitHub **Validate GTK 3 bounce patch** workflow downloads pinned Ubuntu
+The manual GitHub **Validate Debian 13 GTK 3 bounce patch** workflow downloads pinned Debian
 source inputs, compiles in CI and tests actual smooth-scroll events with
 GtkTextView, GtkTreeView and a drawing area in GtkViewport. It checks all four
 edges with/without overlay scrollbars, content clipping, logical adjustments,
@@ -26,14 +27,14 @@ rebound, fixed scrollbar positions and realize/unrealize/add/remove lifecycle.
 The same events are run against stock GTK as a negative control. Exported ABI
 symbols and upstream scrolledwindow sizing tests are also checked.
 
-The **Build GTK 3 bounce system packages** workflow also produces an
-install/rollback bundle for Ubuntu noble / Linux Mint 22.x. It builds matching
-amd64 and i386 Debian packages at version **3.24.41-4ubuntu1.3+bounce1**, retaining
-Ubuntu hardening, runtime backends, GIR data and strict package symbol checks.
+The **Build Debian 13 GTK 3 bounce system packages** workflow produces an
+install/rollback bundle for Debian 13 (trixie), building in Debian 13 containers.
+It builds matching amd64 and i386 packages at version **3.24.49-3+bounce1**, retaining
+Debian hardening, runtime backends, GIR data and strict package symbol checks.
 Only docs, installer udebs and the auxiliary examples package are omitted.
 Native C regression clients exercise both 32-bit and 64-bit package contents.
 
-Extract the `gtk3-bounce-noble-multiarch` artifact and run:
+Extract the `gtk3-bounce-trixie-multiarch` artifact and run:
 
 ```bash
 bash install.sh --dry-run

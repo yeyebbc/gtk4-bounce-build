@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unpack pinned Ubuntu source; optionally prepare native Debian packaging."""
+"""Unpack pinned Debian source; optionally prepare native Debian packaging."""
 import argparse
 from datetime import datetime, timezone
 from email.utils import format_datetime
@@ -46,9 +46,6 @@ else:
     marker = "Package: gtk-3-examples\n"
     assert control.read_text().count(marker) == 1
     text = control.read_text().replace(marker, marker + "Build-Profiles: <!pkg.gtk3.noexamples>\n")
-    # Ubuntu's architecture-independent translation helper lacks Multi-Arch:
-    # foreign, so cross builds must explicitly request the native tool.
-    text = text.replace("dh-sequence-translations,", "dh-sequence-translations:native,")
     control.write_text(text)
     rules = source / "debian/rules"
     rules.write_text(rules.read_text() + "\n# CI runs focused tests against the packaged library.\n"
@@ -58,9 +55,9 @@ else:
     epoch = int(subprocess.check_output(["git", "show", "-s", "--format=%ct", "HEAD"], cwd=root, text=True))
     date = datetime.fromtimestamp(epoch, timezone.utc)
     entry = (
-        f"gtk+3.0 ({config['version']}) noble; urgency=medium\n\n"
+        f"gtk+3.0 ({config['version']}) {config['debian_codename']}; urgency=medium\n\n"
         "  * Port Christian Hergert's GtkScrolledWindow bounce scrolling to GTK 3.\n"
-        "  * Preserve Ubuntu patches, runtime backends, package layout and ABI checks.\n"
+        "  * Preserve Debian patches, runtime backends, package layout and ABI checks.\n"
         "  * Omit docs, installer udebs and examples; run focused tests in CI.\n\n"
         f" -- GTK Bounce Builder <builder@localhost>  {format_datetime(date)}\n\n"
     )

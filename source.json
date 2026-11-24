@@ -3,7 +3,6 @@
   "base_version": "4.18.6+ds-2",
   "version": "4.18.6+ds-2+bounce1",
   "build_profiles": ["nodoc", "noinsttest", "noudeb"],
-  "architecture": "amd64",
   "debian_codename": "trixie",
   "archive": "https://deb.debian.org/debian/pool/main/g/gtk4/",
   "files": {

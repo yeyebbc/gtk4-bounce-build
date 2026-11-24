@@ -29,12 +29,13 @@ symbols and upstream scrolledwindow sizing tests are also checked.
 
 The **Build Debian 13 GTK 3 bounce system packages** workflow produces an
 install/rollback bundle for Debian 13 (trixie), building in Debian 13 containers.
-It builds matching amd64 and i386 packages at version **3.24.49-3+bounce1**, retaining
+It builds amd64, i386 and arm64 packages at version **3.24.49-3+bounce1** with
 Debian hardening, runtime backends, GIR data and strict package symbol checks.
 Only docs, installer udebs and the auxiliary examples package are omitted.
 Native C regression clients exercise both 32-bit and 64-bit package contents.
 
-Extract the `gtk3-bounce-trixie-multiarch` artifact and run:
+Extract `gtk3-bounce-trixie-arm64` on ARM64 or `gtk3-bounce-trixie-multiarch`
+on amd64 (including i386 packages). Run the following in that directory.
 
 ```bash
 bash install.sh --dry-run

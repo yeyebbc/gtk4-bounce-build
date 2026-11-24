@@ -4,7 +4,8 @@ GTK 3 bounce scrolling for Debian 13 (trixie) / GNOME 48
 This bundle replaces native system GTK 3 packages with
 3.24.49-3+bounce1, based on Debian's exact 3.24.49-3
 source plus the GTK 3 bounce port. Compilation and regression testing
-happen in GitHub Actions. Both amd64 and i386 packages are included.
+happen in GitHub Actions. The amd64 bundle includes i386 packages. The
+arm64 bundle includes native ARM64 packages.
 
 From this extracted directory, preview the APT transaction:
   bash install.sh --dry-run
@@ -13,8 +14,8 @@ Install:
   bash install.sh
 
 The helper verifies checksums, OS, architecture and installed package
-versions. It selects only GTK 3 packages already installed on your machine,
-including both architectures, and uses apt-get --no-remove. It asks for
+versions. It selects only matching GTK 3 packages already installed on your
+machine and uses apt-get --no-remove. It asks for
 sudo and shows APT's transaction for you to confirm.
 
 Log out and back in, or reboot, so applications load the new GTK library.

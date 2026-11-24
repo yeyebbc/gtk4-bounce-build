@@ -5,7 +5,8 @@ repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_dir"
 . /etc/os-release
 [[ "$ID" == debian && "$VERSION_ID" == 13 && "$VERSION_CODENAME" == trixie ]]
-[[ $(dpkg --print-architecture) == amd64 ]]
+arch=$(dpkg --print-architecture)
+[[ "$arch" == amd64 || "$arch" == arm64 ]]
 export DEB_BUILD_PROFILES='nodoc noinsttest noudeb'
 
 python3 scripts/prepare-source.py

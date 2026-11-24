@@ -9,7 +9,9 @@ GitHub Actions builds Debian's exact sources with the existing bounce patches:
 | Toolkit | Debian source | Custom version | Architectures | Install artifact |
 | --- | --- | --- | --- | --- |
 | GTK 4 | `4.18.6+ds-2` | `4.18.6+ds-2+bounce1` | amd64 | `gtk4-bounce-trixie-amd64` |
+| GTK 4 | `4.18.6+ds-2` | `4.18.6+ds-2+bounce1` | arm64 | `gtk4-bounce-trixie-arm64` |
 | GTK 3 | `3.24.49-3` | `3.24.49-3+bounce1` | amd64 + i386 | `gtk3-bounce-trixie-multiarch` |
+| GTK 3 | `3.24.49-3` | `3.24.49-3+bounce1` | arm64 | `gtk3-bounce-trixie-arm64` |
 
 These are the [GTK 4](https://packages.debian.org/trixie/libgtk-4-1) and
 [GTK 3](https://packages.debian.org/trixie/libgtk-3-0t64) versions shipped for
@@ -72,8 +74,9 @@ and auxiliary examples/tests, then run focused tests separately from the
 
 - GTK 4: upstream scrolledwindow sizing tests against installed packages and
   the installed-library rendering/scroll-boundary smoke test under Xvfb.
-- GTK 3: native C scroll tests and GTK/GDK ABI checks for amd64 and i386;
-  Python GI scroll tests on amd64; upstream scrolledwindow sizing tests on both.
+- GTK 3 includes C scroll tests, GTK/GDK ABI checks and upstream scrolledwindow
+  sizing tests on each architecture, plus Python GI scroll tests on native
+  amd64 and arm64.
   Stock GTK provides a negative control for the bounce behavior. See
   [the GTK 3 tests](gtk3/README.md).
 

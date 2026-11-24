@@ -23,13 +23,20 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    name: GTK 3 (${{ matrix.architecture }})
+    runs-on: ${{ matrix.runner }}
     container: debian:13
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        architecture: [amd64, i386]
+        include:
+          - architecture: amd64
+            runner: ubuntu-24.04
+          - architecture: i386
+            runner: ubuntu-24.04
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
     env:
       DEBIAN_FRONTEND: noninteractive
     steps:
@@ -66,23 +73,38 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
   bundle:
+    name: GTK 3 install bundle (${{ matrix.architecture }})
     needs: build
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: amd64
+            artifact: gtk3-bounce-trixie-multiarch
+          - architecture: arm64
+            artifact: gtk3-bounce-trixie-arm64
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          pattern: gtk3-packages-*
-          path: _gtk3/incoming/
+          name: gtk3-packages-${{ matrix.architecture }}
+          path: _gtk3/incoming/gtk3-packages-${{ matrix.architecture }}/
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: matrix.architecture == 'amd64'
+        with:
+          name: gtk3-packages-i386
+          path: _gtk3/incoming/gtk3-packages-i386/
       - name: Assemble verified install and rollback bundle
-        run: /usr/bin/python3 gtk3/bundle.py
+        run: /usr/bin/python3 gtk3/bundle.py --architecture "${{ matrix.architecture }}"
       - name: Upload system install bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: gtk3-bounce-trixie-multiarch
-          path: dist/gtk3-bounce-trixie-multiarch/
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}/
           if-no-files-found: error
           retention-days: 90

@@ -2,11 +2,14 @@
 set -euo pipefail
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$repo_dir"
-arch=${1:?Usage: package.sh amd64|i386}
-[[ "$arch" == amd64 || "$arch" == i386 ]]
+arch=${1:?Usage: package.sh amd64|i386|arm64}
 . /etc/os-release
 [[ "$ID" == debian && "$VERSION_ID" == 13 && "$VERSION_CODENAME" == trixie ]]
-[[ $(dpkg --print-architecture) == amd64 ]]
+build_arch=$(dpkg --print-architecture)
+case "$build_arch:$arch" in
+  amd64:amd64|amd64:i386|arm64:arm64) ;;
+  *) printf 'Unsupported GTK 3 build architecture %s for %s\n' "$build_arch" "$arch" >&2; exit 1 ;;
+esac
 export DEB_BUILD_PROFILES='nodoc noudeb nocheck pkg.gtk3.noexamples'
 build_dir="$repo_dir/_gtk3/packages/$arch"
 /usr/bin/python3 gtk3/prepare-source.py --packages --build-dir "$build_dir"
@@ -25,7 +28,7 @@ fi
 (
   cd "$build_dir/deps"
   sudo mk-build-deps --install --remove \
-    --build-arch amd64 --host-arch "$arch" \
+    --build-arch "$build_arch" --host-arch "$arch" \
     --build-profiles "${DEB_BUILD_PROFILES// /,}" \
     --tool 'apt-get --yes --no-remove --no-install-recommends -o Debug::pkgProblemResolver=true' ../source/debian/control
 )
@@ -34,7 +37,7 @@ jobs=$(nproc)
 (( jobs <= 2 )) || jobs=2
 (
   cd "$build_dir/source"
-  if [[ "$arch" == amd64 ]]; then
+  if [[ "$arch" == "$build_arch" ]]; then
     DEB_BUILD_OPTIONS="parallel=$jobs nocheck" dpkg-buildpackage -b -us -uc
   else
     DEB_BUILD_OPTIONS="parallel=$jobs nocheck" dpkg-buildpackage -B -a"$arch" -us -uc
@@ -69,14 +72,14 @@ read -r -a client_flags <<< "$("$pkgconf" --cflags --libs atk cairo gdk-pixbuf-2
 export XDG_CONFIG_HOME="$build_dir/test-config"
 export GDK_BACKEND=x11 GIO_USE_VFS=local GTK_THEME=Adwaita NO_AT_BRIDGE=1 GSETTINGS_BACKEND=memory LIBGL_ALWAYS_SOFTWARE=1
 xvfb-run -a dbus-run-session -- env G_DEBUG=fatal-criticals "$build_dir/test-bounce" --stock
-if [[ "$arch" == amd64 ]]; then
+if [[ "$arch" == "$build_arch" ]]; then
   xvfb-run -a dbus-run-session -- /usr/bin/python3 gtk3/test-bounce.py --stock
 fi
 export LD_LIBRARY_PATH="$library_dir"
 export GTK3_TEST_OUTPUT="$build_dir/test-output"
 xvfb-run -a dbus-run-session -- env G_DEBUG=fatal-criticals "$build_dir/test-bounce"
 xvfb-run -a dbus-run-session -- "$build_dir/scrolledwindow"
-if [[ "$arch" == amd64 ]]; then
+if [[ "$arch" == "$build_arch" ]]; then
   xvfb-run -a dbus-run-session -- env G_DEBUG=fatal-criticals /usr/bin/python3 gtk3/test-bounce.py
 fi
 # Stock rollback packages come through APT's authenticated indexes.

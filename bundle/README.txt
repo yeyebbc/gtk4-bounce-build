@@ -1,4 +1,4 @@
-GTK 4 bounce scrolling for Debian 13 (trixie) / GNOME 48, amd64
+GTK 4 bounce scrolling for Debian 13 (trixie) / GNOME 48
 
 Extract the GitHub Actions artifact, open a terminal in this folder, then run:
 

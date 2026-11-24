@@ -8,11 +8,10 @@
     "gtk+3.0_3.24.49.orig.tar.xz": "5ea52c6a28f0e5ecf2e9a3c2facbb30d040b73871fcd5f33cd1317e9018a146e",
     "gtk+3.0_3.24.49-3.debian.tar.xz": "0d20b6ef612ca462929f0f27ad0e359881938a7e44088687f2ce632a4bc0fcd7"
   },
-  "architecture": "amd64",
-  "architectures": [
-    "amd64",
-    "i386"
-  ],
+  "architectures": {
+    "amd64": ["amd64", "i386"],
+    "arm64": ["arm64"]
+  },
   "debian_codename": "trixie",
   "build_profiles": [
     "nodoc",
